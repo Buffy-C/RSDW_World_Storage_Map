@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>RSDW Storage Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#0d1117;color:#e0e0e0;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+#tb{background:#161b27;border-bottom:2px solid #21293a;padding:6px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0;position:relative;z-index:1000}
+#tb h1{font-size:14px;color:#e2a93b;white-space:nowrap;font-weight:bold}
+#search{flex:1;min-width:150px;max-width:240px;padding:5px 9px;border-radius:5px;border:1px solid #30415a;background:#0d1117;color:#e0e0e0;font-size:13px}
+select.f{padding:5px 7px;border-radius:5px;border:1px solid #30415a;background:#0d1117;color:#e0e0e0;font-size:12px}
+#refreshBtn{padding:5px 10px;border-radius:5px;border:1px solid #30415a;background:#1a2535;color:#c8d8f0;font-size:12px;cursor:pointer}
+#refreshBtn:hover{background:#243045}
+#refreshBtn:disabled{opacity:0.5;cursor:default}
+#mc{font-size:11px;color:#888;white-space:nowrap}
+.leg{display:flex;gap:8px;font-size:11px;align-items:center;flex-wrap:wrap}
+.lg{display:flex;align-items:center;gap:3px}
+.dt{width:9px;height:9px;border-radius:50%;display:inline-block;border:1px solid rgba(255,255,255,.25)}
+#cb{padding:4px 9px;border-radius:5px;border:1px solid #30415a;background:#1c2535;color:#aaa;cursor:pointer;font-size:11px}
+#wrap{flex:1;display:flex;overflow:hidden;position:relative}
+#map{flex:1;background:#0d1117}
+#coords{position:absolute;bottom:12px;left:12px;z-index:1000;background:rgba(13,17,23,0.88);border:1px solid #30415a;border-radius:6px;padding:6px 12px;font-family:monospace;font-size:13px;pointer-events:none;backdrop-filter:blur(4px);min-width:230px;line-height:1.8}
+#coords .cl{color:#555;font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+.cv{color:#e2e8f0;font-weight:600}.cl2{color:#888;font-size:11px;margin-right:5px}
+.note{color:#555;font-size:10px}
+#sb{width:290px;background:#161b27;border-left:1px solid #21293a;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+#sbh{padding:10px 12px 7px;border-bottom:1px solid #21293a;flex-shrink:0}
+#sbi{font-size:11px;color:#e2a93b;margin-bottom:1px;font-family:monospace}
+#sbn{font-size:14px;font-weight:bold}
+#sbm{font-size:11px;color:#888;margin-top:2px}
+#sbb{flex:1;overflow-y:auto;padding:8px 12px}
+.ir{display:flex;justify-content:space-between;align-items:flex-start;padding:3px 0;border-bottom:1px solid #21293a22}
+.in{color:#c8c8c8;font-size:12px;word-break:break-all}.in.guid{color:#556;font-size:10px;font-family:monospace}
+.ic{color:#e2a93b;font-size:12px;font-weight:bold;min-width:40px;text-align:right;flex-shrink:0}
+#cp{display:none;position:absolute;top:12px;left:12px;background:#161b27;border:1px solid #30415a;border-radius:7px;padding:14px;z-index:2000;width:450px;box-shadow:0 4px 20px rgba(0,0,0,.8)}
+#cp h3{font-size:12px;color:#e2a93b;margin-bottom:8px}
+.cr{display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:11px}
+.cr label{width:210px;color:#aaa;flex-shrink:0}
+.cr input{flex:1;padding:3px 5px;background:#0d1117;border:1px solid #30415a;color:#e0e0e0;border-radius:3px;font-size:11px}
+#ca{width:100%;padding:5px;background:#e2a93b;color:#000;border:none;border-radius:4px;cursor:pointer;font-weight:bold;font-size:12px;margin-top:10px}
+#loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(13,17,23,0.95);border:1px solid #30415a;border-radius:8px;padding:20px 32px;z-index:9000;font-size:13px;color:#aaa;text-align:center;line-height:2}
+.leaflet-control-zoom{border:1px solid #30415a!important;background:#161b27!important}
+.leaflet-control-zoom a{background:#161b27!important;color:#aaa!important;border-bottom:1px solid #30415a!important}
+.leaflet-control-zoom a:hover{background:#21293a!important;color:#e0e0e0!important}
+.rsdw-cluster{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;border:2px solid rgba(255,255,255,0.5);color:#fff}
+.dark-popup .leaflet-popup-content-wrapper{background:#161b27;border:1px solid #30415a;color:#e0e0e0;border-radius:6px}
+.dark-popup .leaflet-popup-tip{background:#161b27}
+.dark-popup .leaflet-popup-close-button{color:#888!important}
+.dark-popup .leaflet-popup-content{margin:10px 14px;font-size:12px}
+</style>
+</head>
+<body>
+<div id="tb">
+  <h1>&#x1F5FA; RSDW Storage Map</h1>
+  <select id="fw" class="f" onchange="loadWorld(this.value)" title="Select world save">
+    <option value="Cotswolds">Cotswolds</option>
+    <option value="Season1LetsPlay">Season1LetsPlay</option>
+    <option value="BuffTheBuilder">Buff the Builder</option>
+  </select>
+  <input id="search" type="text" placeholder="Search item, chest, zone&hellip;" oninput="doSearch()">
+  <select id="ft" class="f" onchange="doSearch()">
+    <option value="">All Types</option>
+    <option>Iron Chest</option><option>Oak Chest</option><option>Ash Chest</option>
+    <option>Weapon Rack</option><option>Armour Mannequin</option>
+    <option>Cape Rack</option><option>Cape Hook</option>
+    <option>Crate</option><option>Lumber Storage</option>
+    <option>Personal Chest</option><option>Fishing Barrel</option><option>Tackle Box</option>
+    <option>Lodestone</option>
+  </select>
+  <select id="fz" class="f" onchange="doSearch()">
+    <option value="">All Zones</option>
+    <option>Bleakfields Valley</option><option>Bramblemead</option>
+    <option>Bramblemead Valley</option><option>Coalridge Pass</option>
+    <option>Dowdun</option><option>Dowdun Reach Base</option>
+    <option>Fractured Plains</option>
+    <option>Temple Woods</option><option>West Dowdun</option>
+  </select>
+  <span id="mc">0 objects</span>
+  <button id="refreshBtn" onclick="refreshFromSave()" title="Re-parse save files and reload map">&#x21BB; Refresh from save</button>
+  <span id="refreshStatus" style="font-size:11px;color:#aaa;margin-left:6px"></span>
+  <div class="leg">
+    <span class="lg"><span class="dt" style="background:#a0b4cc"></span>Iron</span>
+    <span class="lg"><span class="dt" style="background:#c8a060"></span>Oak</span>
+    <span class="lg"><span class="dt" style="background:#7ac060"></span>Ash</span>
+    <span class="lg"><span class="dt" style="background:#e06080"></span>Rack</span>
+    <span class="lg"><span class="dt" style="background:#a060c8"></span>Mannequin</span>
+    <span class="lg"><span class="dt" style="background:#ffd700;border-color:#ffd700"></span>Lodestone</span>
+    <span class="lg"><span class="dt" style="background:#60c8e0"></span>Cape</span>
+    <span class="lg"><span class="dt" style="background:#b0a070"></span>Crate/Other</span>
+    <span class="lg"><span class="dt" style="background:#ff8855;border-color:#ff8855"></span>Unnamed</span>
+  </div>
+  <button id="cb" onclick="toggleCal()">&#9881; Calibrate</button>
+</div>
+<div id="wrap">
+  <div id="map"></div>
+  <div id="coords">
+    <div class="cl">cursor &mdash; world game coords</div>
+    <div style="margin-top:1px">
+      <span class="cl2">X</span><span id="cxv" class="cv">&mdash;</span>
+      &nbsp;&nbsp;&nbsp;
+      <span class="cl2">Y</span><span id="cyv" class="cv">&mdash;</span>
+    </div>
+    <div id="czv" style="color:#e2a93b;font-size:11px;margin-top:1px">&mdash;</div>
+    <div class="note">Right-click to pin &middot; &#9881; calibrate</div>
+  </div>
+  <div id="cp">
+    <h3>&#9881; World Coordinate Calibration</h3>
+    <p style="font-size:10px;color:#555;margin-bottom:10px;line-height:1.6">
+      Tile 00 = SW corner, 77 = NE corner.<br>
+      <span style="color:#e2a93b">Zone Y offsets:</span> BFV +0 &middot; DRB +22,677 &middot;
+      Bramblemead +46,156 &middot; West Dowdun +46,156 &middot; Bram Valley +46,515 &middot; Temple Woods +92,604
+    </p>
+    <div class="cr"><label>World X min &mdash; west edge (col 0 left)</label><input id="cxn" type="number" value="0"></div>
+    <div class="cr"><label>World X max &mdash; east edge (col 7 right)</label><input id="cxx" type="number" value="302000"></div>
+    <div class="cr"><label>Raw Y max &mdash; SOUTH/bottom edge (high gy)</label><input id="cyx" type="number" value="202000"></div>
+    <div class="cr"><label>Raw Y min &mdash; NORTH/top edge (low gy)</label><input id="cyn" type="number" value="-101400"></div>
+    <button id="ca" onclick="applyCalibration()">Apply &amp; Redraw Markers</button>
+  </div>
+  <div id="sb">
+    <div id="sbh">
+      <div id="sbi">&nbsp;</div>
+      <div id="sbn">Click a marker</div>
+      <div id="sbm">Select a marker to see contents</div>
+    </div>
+    <div id="sbb"><div style="color:#555;font-size:12px;padding:14px 0;text-align:center">Click any dot to see contents</div></div>
+  </div>
+  <div id="loading">Loading map&hellip;</div>
+</div>
+
+<script>
+// ── World bounds ─────────────────────────────────────────────
+// In this game Y increases SOUTHWARD, so yMax is SOUTH (bottom) and yMin is NORTH (top).
+// Markers are placed using RAW o.gy (no zone offset), which maps directly to pixels.
+// Calibrated from 3 points:
+//   Temple Woods gy=178350 → 7.787% from bottom (cursor Y=-64,379)
+//   Coalridge    gy=-61929 → 86.980% from bottom (cursor Y=196,164)
+//   Dowdun Base  gy=43825  → 53.076% from bottom (cursor Y=84,621)
+let WORLD = {xMin:0, xMax:302000, yMin:-101400, yMax:202000};
+// GRID = natural pixel size of world_map.png (set after probe)
+let GRID  = {W:1, H:1};
+
+// ── Manual data corrections ───────────────────────────────────
+// These override individual chest records where RSDW_Chest_Map.html has wrong data.
+// Keys are chest IDs. Fields: name ('' = unnamed/orange), items (replaces item list).
+// Patches override stale or bleeding parse data for specific chests.
+// OAK-049: file-space proximity bleeds wrong items — real contents confirmed manually.
+// OAK-061/062/063: "Wardstones" cluster — items are correct from fresh parse (starter kit chests).
+const PATCHES = {
+  'OAK-049': {name:'', items:[{name:'Clean Water',count:451},{name:'Wither Water',count:18}]},
+};
+function applyPatches(objects){
+  return objects.map(o=>{
+    const p=PATCHES[o.id];
+    if(!p)return o;
+    return Object.assign({},o,p);
+  });
+}
+
+// ── Zone table ──────────────────────────────────────────────
+const ZONES = [
+  [215000,228000, 35000, 55000, 22677,"Dowdun Reach Base"],
+  [ 28000, 32500,160000,185000, 92604,"Temple Woods"],
+  [ 32500, 37500,160000,185000, 46156,"Bramblemead"],
+  [  5000, 27000,155000,200000, 46156,"West Dowdun"],
+  [ 37500, 52000,165000,185000, 46515,"Bramblemead Valley"],
+  [130000,155000,-30000, -5000,     0,"Bleakfields Valley"],
+  [205000,228000,-75000,-55000,     0,"Coalridge Pass"],
+  [ 80000,140000, 90000,145000,     0,"Fractured Plains"]
+];
+const TC={
+  'Iron Chest':'#a0b4cc','Oak Chest':'#c8a060','Ash Chest':'#7ac060',
+  'Weapon Rack':'#e06080','Armour Mannequin':'#a060c8',
+  'Lodestone':'#ffd700',
+  'Cape Rack':'#60c8e0','Cape Hook':'#60a0c8',
+  'Crate':'#b0a070','Lumber Storage':'#905020',
+  'Personal Chest':'#d4c0f0','Fishing Barrel':'#4080c8','Tackle Box':'#4090c8',
+};
+
+// ── Coord helpers ────────────────────────────────────────────
+function getZone(lx,ly){
+  for(const[x1,x2,y1,y2,off,name]of ZONES)if(lx>=x1&&lx<=x2&&ly>=y1&&ly<=y2)return{off,name};
+  return{off:0,name:''};
+}
+function wToLL(wx,wy){
+  return L.latLng(
+    (WORLD.yMax-wy)/(WORLD.yMax-WORLD.yMin)*GRID.H,  // Y INVERTED: high worldY = south = low on map
+    (wx-WORLD.xMin)/(WORLD.xMax-WORLD.xMin)*GRID.W
+  );
+}
+function llToW(ll){
+  return{
+    worldX:WORLD.xMin+(ll.lng/GRID.W)*(WORLD.xMax-WORLD.xMin),
+    worldY:WORLD.yMax-(ll.lat/GRID.H)*(WORLD.yMax-WORLD.yMin)  // Y INVERTED
+  };
+}
+function zoneFromWorld(wx,wy){
+  // wy is raw gy — zone bounds are already in raw gy space, no offset needed
+  for(const[x1,x2,y1,y2,,name]of ZONES)
+    if(wx>=x1&&wx<=x2&&wy>=y1&&wy<=y2)return name;
+  return'';
+}
+
+// ── (no tile machinery needed — single image) ─────────────────
+
+// ── Map init ─────────────────────────────────────────────────
+let map, cluster, allMarkers=[];
+
+function initMap(objects){
+  // minZoom calculated so the whole grid fits in the viewport
+  const vpW=document.getElementById('map').clientWidth||window.innerWidth;
+  const vpH=document.getElementById('map').clientHeight||window.innerHeight;
+  const minZ=Math.floor(Math.log2(Math.min(vpW/GRID.W, vpH/GRID.H)))-1;
+  map=L.map('map',{
+    crs:L.CRS.Simple,
+    minZoom:Math.min(minZ,-6),maxZoom:5,
+    zoomSnap:0.25,zoomDelta:0.5,
+    attributionControl:false
+  });
+  map.getContainer().style.background='#0d1117';
+
+  L.imageOverlay('world_map.png',[[0,0],[GRID.H,GRID.W]]).addTo(map);
+  map.fitBounds([[0,0],[GRID.H,GRID.W]],{padding:[10,10]});
+
+  cluster=L.markerClusterGroup({
+    maxClusterRadius:35,
+    iconCreateFunction:g=>{
+      const n=g.getChildCount(),sz=n>50?34:n>10?28:22;
+      const bg=n>50?'#8b2fc9':n>10?'#b87d1a':'#2d6a9f';
+      return L.divIcon({html:`<div class="rsdw-cluster" style="width:${sz}px;height:${sz}px;background:${bg};font-size:${sz>28?13:11}px">${n}</div>`,className:'',iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
+    }
+  });
+  map.addLayer(cluster);
+  buildMarkers(objects);
+
+  map.on('mousemove',e=>{
+    const{worldX,worldY}=llToW(e.latlng);
+    document.getElementById('cxv').textContent=Math.round(worldX).toLocaleString();
+    document.getElementById('cyv').textContent=Math.round(worldY).toLocaleString();
+    document.getElementById('czv').textContent=zoneFromWorld(worldX,worldY)||'—';
+  });
+
+  map.on('contextmenu',e=>{
+    const{worldX,worldY}=llToW(e.latlng);
+    const zone=zoneFromWorld(worldX,worldY)||'unknown zone';
+    L.popup({closeButton:true,maxWidth:250,className:'dark-popup'})
+      .setLatLng(e.latlng)
+      .setContent(`<div style="font-size:10px;color:#888;margin-bottom:4px;text-transform:uppercase">Pinned world coords</div>
+        <div style="font-family:monospace;font-size:15px;font-weight:700;line-height:1.7">X:&nbsp;${Math.round(worldX).toLocaleString()}<br>Y:&nbsp;${Math.round(worldY).toLocaleString()}</div>
+        <div style="font-size:10px;color:#e2a93b;margin-top:3px">${zone}</div>`)
+      .openOn(map);
+    L.DomEvent.stop(e);
+  });
+
+  L.control.zoom({position:'topleft'}).addTo(map);
+}
+
+// ── Markers ──────────────────────────────────────────────────
+function buildMarkers(objects){
+  allMarkers=[];if(cluster)cluster.clearLayers();
+  objects.forEach(o=>{
+    const{name:zn}=getZone(o.gx,o.gy);
+    const wx=o.gx,wy=o.gy;
+    const named=!!(o.name&&o.name.trim());
+    const isLode=o.category==='lodestone';
+    const col=isLode?'#ffd700':(named?(TC[o.type]||'#aaa'):'#ff8855');
+    let m;
+    if(isLode){
+      // Diamond icon for lodestones
+      const sz=14;
+      m=L.marker(wToLL(wx,wy),{
+        icon:L.divIcon({
+          html:`<div style="width:${sz}px;height:${sz}px;background:${col};transform:rotate(45deg);border:1.5px solid rgba(0,0,0,0.5);box-shadow:0 0 4px ${col}88"></div>`,
+          className:'',iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]
+        })
+      });
+    }else{
+      m=L.circleMarker(wToLL(wx,wy),{radius:5,fillColor:col,color:named?'rgba(255,255,255,0.25)':'#cc5533',weight:1.5,fillOpacity:0.9});
+    }
+    m._obj=o;m._wx=wx;m._wy=wy;m._zn=zn||o.zone||'';
+    m.on('click',()=>showSidebar(m));
+    allMarkers.push(m);cluster.addLayer(m);
+  });
+  document.getElementById('mc').textContent=`${allMarkers.length} objects`;
+}
+
+function showSidebar(m){
+  const o=m._obj,items=o.items||[],col=TC[o.type]||'#ffd700';
+  document.getElementById('sbi').textContent=o.id||'';
+  document.getElementById('sbn').textContent=o.name||(o.category==='lodestone'?'Lodestone':'(unnamed)');
+  document.getElementById('sbm').innerHTML=`<span style="color:${col}">${o.type}</span> · ${m._zn||'?'} · X:${Math.round(m._wx).toLocaleString()} Y:${Math.round(m._wy).toLocaleString()}`;
+  const body=document.getElementById('sbb');
+  if(o.category==='lodestone'){
+    body.innerHTML=`<div style="color:#ffd700;font-size:12px;padding:12px 0;text-align:center">⬡ Teleportation Lodestone</div>`;
+    return;
+  }
+  if(!items.length){body.innerHTML=`<div style="color:#555;font-size:12px;padding:12px 0">Empty / unknown contents</div>`;return;}
+  const nt=new Set(items.map(i=>i.name)).size,ni=items.reduce((s,i)=>s+(i.count||0),0);
+  let h=`<div style="color:#555;font-size:11px;margin-bottom:6px">${nt} types · ${ni.toLocaleString()} total</div>`;
+  items.forEach(it=>{
+    const isGuid=it.name&&it.name.includes('…');
+    const durStr=it.durability!=null?`<span style="color:#555;font-size:10px"> [${Math.round(it.durability)} dur]</span>`:'';
+    h+=`<div class="ir"><span class="in${isGuid?' guid':''}">${it.name}${durStr}</span><span class="ic">${Number(it.count).toLocaleString()}</span></div>`;
+  });
+  body.innerHTML=h;
+}
+
+function doSearch(){
+  const q=(document.getElementById('search').value||'').trim().toLowerCase();
+  const tf=document.getElementById('ft').value,zf=document.getElementById('fz').value;
+  if(!cluster)return;
+  cluster.clearLayers();
+  let matched=0,first=null;
+  allMarkers.forEach(m=>{
+    const o=m._obj;
+    const ok=(!zf||o.zone===zf||m._zn===zf)&&(!tf||o.type===tf)&&
+             (!q||(o.name||'').toLowerCase().includes(q)||(o.id||'').toLowerCase().includes(q)||
+              (o.items||[]).some(i=>(i.name||'').toLowerCase().includes(q)));
+    if(ok){cluster.addLayer(m);matched++;if(!first)first=m;}
+  });
+  document.getElementById('mc').textContent=(q||tf||zf)?`${matched}/${allMarkers.length}`:`${allMarkers.length} objects`;
+  if(q&&first)map.setView(first.getLatLng(),Math.max(map.getZoom(),1));
+}
+
+function toggleCal(){const cp=document.getElementById('cp');cp.style.display=cp.style.display==='block'?'none':'block';}
+function applyCalibration(){
+  WORLD.xMin=+document.getElementById('cxn').value;WORLD.xMax=+document.getElementById('cxx').value;
+  WORLD.yMax=+document.getElementById('cyx').value;WORLD.yMin=+document.getElementById('cyn').value;
+  if(_mapReady)buildMarkers(window._OBJECTS||[]);
+  document.getElementById('cp').style.display='none';
+}
+
+// ── Bootstrap ─────────────────────────────────────────────────
+window._OBJECTS=[];
+let _mapReady=false,_pendingObjects=null;
+
+function startWithObjects(objects){
+  window._OBJECTS=applyPatches(objects);
+  if(_mapReady){buildMarkers(window._OBJECTS);}
+  else{
+    const _probe=new Image();
+    _probe.onload=function(){
+      GRID.W=this.naturalWidth;GRID.H=this.naturalHeight;
+      document.getElementById('loading').style.display='none';
+      _mapReady=true;
+      initMap(window._OBJECTS||[]);
+    };
+    _probe.onerror=function(){
+      document.getElementById('loading').innerHTML='⚠ world_map.png not found in the same folder as this HTML file.';
+    };
+    _probe.src='world_map.png';
+  }
+}
+
+function loadWorld(name){
+  const ld=document.getElementById('loading');
+  ld.textContent=`Loading ${name}…`;ld.style.display='';
+  const url=`world_${name}.json`;
+  fetch(url)
+    .then(r=>{if(!r.ok)throw new Error(r.status);return r.json();})
+    .then(data=>{
+      ld.style.display='none';
+      if(_mapReady){window._OBJECTS=applyPatches(data);buildMarkers(window._OBJECTS);}
+      else startWithObjects(data);
+    })
+    .catch(()=>{
+      // Fallback: try legacy iframe approach (RSDW_Chest_Map.html) for Cotswolds
+      if(name==='Cotswolds'){
+        ld.textContent='Loading legacy data…';
+        const fr=document.createElement('iframe');
+        fr.style.cssText='position:absolute;opacity:0;pointer-events:none;top:-9999px;width:1px;height:1px';
+        fr.src='RSDW_Chest_Map.html';
+        fr.onload=function(){
+          try{
+            const s=this.contentDocument.createElement('script');
+            s.textContent='window.__RSDW_OBJ=typeof OBJECTS!=="undefined"?OBJECTS:[];';
+            this.contentDocument.head.appendChild(s);
+            const o=this.contentWindow.__RSDW_OBJ;
+            ld.style.display='none';
+            startWithObjects(Array.isArray(o)&&o.length?o:[]);
+          }catch(e){ld.style.display='none';startWithObjects([]);}
+        };
+        fr.onerror=()=>{ld.style.display='none';startWithObjects([]);};
+        document.body.appendChild(fr);
+      }else{
+        ld.innerHTML=`⚠ ${url} not found. Run the parser to generate world data.`;
+      }
+    });
+}
+
+function refreshFromSave(){
+  const btn=document.getElementById('refreshBtn');
+  const st=document.getElementById('refreshStatus');
+  btn.disabled=true;
+  btn.textContent='⏳ Refreshing…';
+  st.style.color='#aaa'; st.textContent='Running parser…';
+  fetch('/refresh',{method:'POST'})
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.ok){
+        st.style.color='#6c6'; st.textContent='Done — reloading…';
+        setTimeout(()=>loadWorld(document.getElementById('fw').value),600);
+      } else {
+        st.style.color='#e66'; st.textContent='Parse error — check server console.';
+        console.error(d.log);
+      }
+    })
+    .catch(()=>{
+      st.style.color='#e66'; st.textContent='Could not reach server. Is Start_Map.bat running?';
+    })
+    .finally(()=>{
+      btn.disabled=false; btn.textContent='↻ Refresh from save';
+      setTimeout(()=>{ st.textContent=''; },8000);
+    });
+}
+
+if(window.location.protocol.startsWith('http')){
+  loadWorld('Cotswolds');
+}else{
+  // file:// — map tiles only, no marker data
+  startWithObjects([]);
+}
+</script>
+</body>
+</html>

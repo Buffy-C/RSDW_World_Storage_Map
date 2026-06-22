@@ -1,0 +1,29 @@
+# Save game files — never commit these
+Saved/
+*.sav
+*.sav.backup
+*.verbackup
+
+# Generated world data — rebuilt by parse_worlds.py
+world_*.json
+
+# Personal spreadsheets / catalogues
+Master_Checklist_RSDW*.xlsx
+RSDW_Chest_Catalogue.xlsx
+Buffy_Item_Catalogue.html
+
+# Old / superseded files
+RSDW_Chest_Map.html
+RSDW_GridOverlay.html
+ashenfall_map.png
+world_map.png
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# OS noise
+.DS_Store
+Thumbs.db
+desktop.ini
