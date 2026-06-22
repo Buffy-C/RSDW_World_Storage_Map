@@ -16,7 +16,9 @@ Buffy_Item_Catalogue.html
 RSDW_Chest_Map.html
 RSDW_GridOverlay.html
 ashenfall_map.png
-world_map.png
+
+# Map tiles folder (superseded by world_map_compressed.jpg / world_map.png)
+map_tiles/
 
 # Python cache
 __pycache__/

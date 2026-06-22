@@ -223,7 +223,9 @@ function initMap(objects){
   });
   map.getContainer().style.background='#0d1117';
 
-  L.imageOverlay('world_map.png',[[0,0],[GRID.H,GRID.W]]).addTo(map);
+  // Prefer compressed version (6MB); falls back to full quality PNG (67MB) if not present
+  const mapImg = document.querySelector('meta[name="map-src"]')?.content || 'world_map_compressed.jpg';
+  L.imageOverlay(mapImg,[[0,0],[GRID.H,GRID.W]]).addTo(map);
   map.fitBounds([[0,0],[GRID.H,GRID.W]],{padding:[10,10]});
 
   cluster=L.markerClusterGroup({
@@ -350,9 +352,20 @@ function startWithObjects(objects){
       initMap(window._OBJECTS||[]);
     };
     _probe.onerror=function(){
-      document.getElementById('loading').innerHTML='⚠ world_map.png not found in the same folder as this HTML file.';
+      // Try full quality PNG as fallback
+      const full=new Image();
+      full.onload=function(){
+        GRID.W=full.naturalWidth; GRID.H=full.naturalHeight;
+        document.querySelector('meta[name="map-src"]')||document.head.insertAdjacentHTML('beforeend','<meta name="map-src" content="world_map.png">');
+        document.getElementById('loading').style.display='none';
+        _mapReady=true; initMap(window._OBJECTS||[]);
+      };
+      full.onerror=function(){
+        document.getElementById('loading').innerHTML='⚠ Map image not found. Place world_map_compressed.jpg or world_map.png in the same folder as this HTML file.';
+      };
+      full.src='world_map.png';
     };
-    _probe.src='world_map.png';
+    _probe.src='world_map_compressed.jpg';
   }
 }
 
