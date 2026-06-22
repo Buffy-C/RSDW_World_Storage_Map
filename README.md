@@ -4,7 +4,7 @@ An interactive storage-container map for **RuneScape: Dragonwilds**, built from 
 
 Click any marker on the map to see exactly what's inside that chest, rack, or lumber storage — item names, counts, and durability — refreshed directly from your save files.
 
-![Map screenshot placeholder](map_tiles/00.png)
+![RSDW Storage Map screenshot](screenshot.png)
 
 ---
 
