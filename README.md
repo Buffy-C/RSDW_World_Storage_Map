@@ -12,7 +12,8 @@ Click any marker on the map to see exactly what's inside that chest, rack, or lu
 
 - **Tile-based world map** stitched from in-game screenshots, rendered with Leaflet.js CRS.Simple
 - **All storage types**: Iron/Oak/Ash/Personal Chests, Crates, Weapon Racks, Armour Mannequins, Cape Racks, Cape Hooks, Lumber Storages, Fishing Barrels, Tackle Boxes, Lodestones
-- **Multi-world support**: switch between save slots (Cotswolds, Season1LetsPlay, Buff the Builder)
+- **Multi-world support**: switch between any of your save slots — the parser auto-detects all worlds in your `Saved/SaveGames/` folder
+- **Lodestone markers**: all teleportation lodestones shown as gold diamond markers for quick navigation reference
 - **Live item names**: resolved from `guid_map.json` and an optional Master Checklist spreadsheet
 - **Filter by type or zone**, search by item name or chest ID
 - **↻ Refresh from save** button — re-parses your `.sav` files and reloads the map without leaving the browser
@@ -48,9 +49,9 @@ Copy your RuneScape: Dragonwilds save files into the `Saved/SaveGames/` folder:
 rsdw-storage-map/
 └── Saved/
     └── SaveGames/
-        ├── Cotswolds.sav
-        ├── Season1LetsPlay.sav
-        └── Buff the Builder.sav
+        ├── MyWorld.sav
+        ├── AnotherWorld.sav
+        └── ...
 ```
 
 Your saves are typically found at:
@@ -84,7 +85,7 @@ You can also run the parser standalone at any time:
 python parse_worlds.py
 ```
 
-This writes `world_Cotswolds.json`, `world_Season1LetsPlay.json`, and `world_BuffTheBuilder.json` into the root folder.
+This writes a `world_<WorldName>.json` file for each detected save into the root folder.
 
 ---
 
@@ -105,9 +106,7 @@ rsdw-storage-map/
 
 **Generated at runtime (not committed):**
 ```
-world_Cotswolds.json
-world_Season1LetsPlay.json
-world_BuffTheBuilder.json
+world_<WorldName>.json   (one per save slot)
 ```
 
 ---
@@ -139,10 +138,9 @@ In `parse_worlds.py`, add an entry to the `WORLDS` dict:
 
 ```python
 WORLDS = {
-    'Cotswolds':       'Cotswolds.sav',
-    'Season1LetsPlay': 'Season1LetsPlay.sav',
-    'BuffTheBuilder':  'Buff the Builder.sav',
-    'MyNewWorld':      'MyNewWorld.sav',   # ← add here
+    'WorldOne':   'WorldOne.sav',
+    'WorldTwo':   'WorldTwo.sav',
+    'MyNewWorld': 'MyNewWorld.sav',   # ← add here
 }
 ```
 
